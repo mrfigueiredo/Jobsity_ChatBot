@@ -41,6 +41,22 @@ namespace ChatApp.Controllers
             return CreatedAtAction(nameof(GetChatRooms), new { id = chatRoom.Id }, chatRoom);
         }
 
+        // Delete: api/Chat/ChatRooms
+        [HttpDelete("ChatRooms")]
+        public async Task<ActionResult<ChatRoom>> DeleteteChatRoom([FromBody] string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return BadRequest("Chat room name cannot be empty.");
+            }
+
+            var chatRoom = new ChatRoom { Name = name };
+            var deletedRoom = _context.ChatRooms.Remove(chatRoom);
+            await _context.SaveChangesAsync();
+
+            return deletedRoom.Entity;
+        }
+
         // GET: api/Chat/Messages/{chatRoomId}
         [HttpGet("Messages/{chatRoomId}")]
         public async Task<ActionResult<IEnumerable<ChatMessage>>> GetRecentMessages(int chatRoomId)

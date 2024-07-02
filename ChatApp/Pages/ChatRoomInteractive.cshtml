@@ -1,0 +1,41 @@
+﻿@page
+@model ChatApp.Pages.ChatRoomInteractiveModel
+@{
+    ViewData["Title"] = "Chat Room";
+    Layout = "_Layout";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Chat Room</h1>
+</div>
+
+<form method="post">
+    <div>
+        <label for="roomSelect">Select Room:</label>
+        <select id="roomSelect" name="roomSelect" class="form-control" asp-for="SelectedRoom">
+            @foreach (var room in Model.ChatRooms)
+            {
+                <option value="@room">@room.Name</option>
+            }
+        </select>
+    </div>
+    <hr />
+
+    <div>
+        <h3>Messages:</h3>
+        <div style="max-height: 300px; overflow-y: scroll;">
+            @foreach (var message in Model.Messages)
+            {
+                <p>@message</p>
+            }
+        </div>
+    </div>
+    <hr />
+
+    <div>
+        <label for="messageContent">Message:</label>
+        <input id="messageContent" name="messageContent" class="form-control" />
+        <input type="hidden" id="userId" name="userId" value="@User.Identity" />
+    </div>
+    <button type="submit" class="btn btn-primary">Send</button>
+</form>

@@ -20,6 +20,7 @@ namespace ChatApp
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             builder.Services.AddControllersWithViews();
+            builder.Services.AddRazorPages();
             builder.Services.AddSignalR();
 
             builder.Services.Configure<RabbitMQSettings>(builder.Configuration.GetSection("RabbitMQ"));
@@ -38,16 +39,21 @@ namespace ChatApp
             }
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+
             app.UseRouting();
+
             app.UseAuthentication();
             app.UseAuthorization();
+
+
+            app.MapRazorPages();
+            app.MapHub<ChatHub>("/chathub");
 
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
-            app.MapRazorPages();
-            app.MapHub<ChatHub>("/chathub");
-
+            
+            
             app.Run();
 
         }
