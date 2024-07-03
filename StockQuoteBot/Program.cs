@@ -8,6 +8,7 @@ var host = Host.CreateDefaultBuilder(args)
     {
         services.Configure<RabbitMQSettings>(context.Configuration.GetSection("RabbitMQ"));
         services.AddHostedService<StockQuoteService>();
+
     })
     .Build();
 
