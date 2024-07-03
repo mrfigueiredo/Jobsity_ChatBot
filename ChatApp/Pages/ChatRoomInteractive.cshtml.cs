@@ -23,12 +23,13 @@ namespace ChatApp.Pages
         public ChatRoomInteractiveModel(ApplicationDbContext context)
         {
             _context = context;
+            SelectedRoom = null;
         }
 
         public void OnGet()
         {
             ChatRooms = _context.ChatRooms.ToList();
-            SelectedRoom = _context.ChatRooms.FirstOrDefault()?.Name;
+            /*SelectedRoom = _context.ChatRooms.FirstOrDefault()?.Name;
             if (SelectedRoom != null)
             {
                 var room = _context.ChatRooms.First(room => room.Name == SelectedRoom);
@@ -41,7 +42,7 @@ namespace ChatApp.Pages
             else
             {
                 Messages = new List<ChatMessage>();
-            }
+            }*/
         }
     }
 }

@@ -13,7 +13,14 @@
     <div>
         <label for="roomSelect">Select Room:</label>
         <select id="roomSelect" name="roomSelect" class="form-control" asp-for="SelectedRoom">
-            @foreach (var room in Model.ChatRooms)
+        @{
+            bool hasSelectedRoom = !string.IsNullOrEmpty(Model.SelectedRoom);
+        }
+        @if (!hasSelectedRoom)
+        {
+            <option value="">Select a room...</option>
+        }
+        @foreach (var room in Model.ChatRooms)
             {
                 <option value="@room.Name">@room.Name</option>
             }
@@ -51,4 +58,15 @@
     @section Scripts{
         <script src="~/js/signalr/dist/browser/signalr.js"></script>
         <script src="~/js/chat.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#roomSelect').change(function () {
+                var selectedRoom = $(this).val();
+                if (selectedRoom !== '') {
+                    $(this).find('option[value=""]').remove();
+                }
+            });
+        });
+    </script>
     }

@@ -1,14 +1,11 @@
 ﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
-using System.Net.Http;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using StockQuoteBot.Models;
-using ChatApp.Data.Models;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace StockQuoteBot.Services
 {
@@ -17,6 +14,7 @@ namespace StockQuoteBot.Services
         private readonly IConnection _connection;
         private readonly IModel _channel;
         private readonly string _queueName;
+        private readonly HubConnection _hub;
 
         public StockQuoteService(IOptions<RabbitMQSettings> options)
         {
@@ -25,10 +23,15 @@ namespace StockQuoteBot.Services
             _channel = _connection.CreateModel();
             _queueName = options.Value.Queue;
             _channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _hub = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5169/chathub")
+                .Build();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await ConnectWithRetryAsync();
+
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += async (model, ea) =>
             {
@@ -41,7 +44,7 @@ namespace StockQuoteBot.Services
                 var formattedMessage = FormatQuoteMessage(stockRequest.StockCode, quote);
 
                 //TODO: Simulate sending this back to the chat application via another queue or service
-                SendMessage(formattedMessage, stockRequest);
+                await _hub.InvokeAsync("SendMessage", "StockBot", formattedMessage, stockRequest.ChatRoom);
             };
 
             _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
@@ -49,27 +52,19 @@ namespace StockQuoteBot.Services
             await Task.CompletedTask;
         }
 
-        private async void SendMessage(string formattedMessage, StockQuoteRequest stockRequest)
+        private async Task ConnectWithRetryAsync()
         {
-            try
+            while (true)
             {
-                var client = new HttpClient();
-
-                var url = "http://localhost:5169/api/Chat/Messages";
-
-                var messageBody = new ChatMessage()
+                try
                 {
-                    ChatRoomId = stockRequest.ChatRoomId,
-                    Content = formattedMessage,
-                    Timestamp = DateTime.UtcNow
-                };
-
-                HttpContent postBody = new StringContent(JsonSerializer.Serialize(messageBody), System.Text.Encoding.UTF8, "application/json");
-                var response = await client.PostAsync(url, postBody);
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine($"Exception occured: {ex.Message}");//Improve logging here
+                    await _hub.StartAsync();
+                    break;
+                }
+                catch
+                {
+                    await Task.Delay(5000); // Wait 5 seconds before retrying
+                }
             }
         }
 

@@ -4,6 +4,6 @@
     {
         public string StockCode { get; set; }
 
-        public int ChatRoomId { get; set; }
+        public string ChatRoom { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using ChatApp.Data.Models;
 using ChatApp.Data;
 using ChatApp.Services;
+using Microsoft.IdentityModel.Tokens;
 
 namespace ChatApp.Hubs
 {
@@ -30,7 +31,7 @@ namespace ChatApp.Hubs
                 if (message.StartsWith("/stock="))
                 {
                     var stockCode = message.Substring(7);
-                    _rabbitMQService.PublishStockRequest(stockCode, room.Id);
+                    _rabbitMQService.PublishStockRequest(stockCode, room.Name);
                 }
                 else
                 {

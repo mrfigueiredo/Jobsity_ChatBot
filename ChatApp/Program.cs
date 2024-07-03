@@ -13,6 +13,19 @@ namespace ChatApp
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(
+                    builder =>
+                    {
+                        builder.WithOrigins("http://localhost")
+                               .AllowAnyHeader()
+                               .AllowAnyMethod()
+                               .AllowCredentials();
+                    });
+            });
+
+
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -44,7 +57,7 @@ namespace ChatApp
 
             app.UseAuthentication();
             app.UseAuthorization();
-
+            app.UseCors();
 
             app.MapRazorPages();
             app.MapHub<ChatHub>("/chathub");
