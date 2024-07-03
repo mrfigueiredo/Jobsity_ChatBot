@@ -16,27 +16,38 @@ namespace ChatApp.Hubs
             _rabbitMQService = rabbitMQService;
         }
 
-        public async Task SendMessage(string user, string message)
+        public async Task ChangeRoom(string oldRoom, string NewRoom)
         {
-            if (message.StartsWith("/stock="))
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, oldRoom);
+            await Groups.AddToGroupAsync(Context.ConnectionId, NewRoom);
+        }
+
+        public async Task SendMessage(string user, string message, string roomName)
+        {
+            var room = _context.ChatRooms.FirstOrDefault(room => room.Name == roomName);
+            if (room != null)
             {
-                var stockCode = message.Substring(7);
-                _rabbitMQService.PublishStockRequest(stockCode);
-            }
-            else
-            {
-                var chatMessage = new ChatMessage
+                if (message.StartsWith("/stock="))
                 {
-                    UserId = user,
-                    Content = message,
-                    Timestamp = DateTime.Now,
-                    ChatRoomId = 1 // assuming a default chatroom
-                };
+                    var stockCode = message.Substring(7);
+                    _rabbitMQService.PublishStockRequest(stockCode, room.Id);
+                }
+                else
+                {
 
-                _context.ChatMessages.Add(chatMessage);
-                await _context.SaveChangesAsync();
+                    var chatMessage = new ChatMessage
+                    {
+                        UserId = user,
+                        Content = message,
+                        Timestamp = DateTime.Now,
+                        ChatRoomId = room.Id
+                    };
 
-                await Clients.All.SendAsync("ReceiveMessage", user, message);
+                    _context.ChatMessages.Add(chatMessage);
+                    await _context.SaveChangesAsync();
+
+                    await Clients.Group(roomName).SendAsync("ReceiveMessage", user, message);
+                }
             }
         }
     }

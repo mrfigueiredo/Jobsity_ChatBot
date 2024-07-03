@@ -31,6 +31,11 @@ namespace ChatApp.Pages
                 return BadRequest("Chat room name cannot be empty.");
             }
 
+            if(_context.ChatRooms.Where(room=> room.Name == roomName).Count() >= 1 )
+            {
+                return BadRequest("Chat room already exist.");
+            }
+
             var chatRoom = new ChatRoom { Name = roomName };
             _context.ChatRooms.Add(chatRoom);
             _context.SaveChanges();
@@ -44,9 +49,12 @@ namespace ChatApp.Pages
                 return BadRequest("Chat room name cannot be empty.");
             }
 
-            var chatRoom = new ChatRoom { Name = roomName };
-            var deletedRoom = _context.ChatRooms.Remove(chatRoom);
-            _context.SaveChanges();
+            var chatRoom = _context.ChatRooms.FirstOrDefault(room => room.Name == roomName);
+            if(chatRoom != null)
+            {
+                var deletedRoom = _context.ChatRooms.Remove(chatRoom);
+                _context.SaveChanges();
+            }
             return RedirectToPage();
         }
     }

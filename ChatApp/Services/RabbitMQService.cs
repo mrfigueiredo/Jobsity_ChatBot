@@ -21,9 +21,9 @@ namespace ChatApp.Services
             _channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
         }
 
-        public void PublishStockRequest(string stockCode)
+        public void PublishStockRequest(string stockCode, int roomId)
         {
-            var message = new StockQuoteRequest { StockCode = stockCode };
+            var message = new StockQuoteRequest { StockCode = stockCode , ChatRoomId = roomId };
             var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
             _channel.BasicPublish(exchange: "", routingKey: _queueName, basicProperties: null, body: body);
         }

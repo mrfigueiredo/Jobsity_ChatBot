@@ -5,6 +5,7 @@ using ChatApp.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 
 namespace ChatApp.Pages
 {
@@ -14,7 +15,9 @@ namespace ChatApp.Pages
         private readonly ApplicationDbContext _context;
 
         public List<ChatRoom> ChatRooms { get; set; }
-        public ChatRoom? SelectedRoom { get; set; }
+
+        [BindProperty]
+        public string? SelectedRoom { get; set; }
         public List<ChatMessage> Messages { get; set; }
 
         public ChatRoomInteractiveModel(ApplicationDbContext context)
@@ -25,11 +28,12 @@ namespace ChatApp.Pages
         public void OnGet()
         {
             ChatRooms = _context.ChatRooms.ToList();
-            SelectedRoom = _context.ChatRooms.FirstOrDefault();
+            SelectedRoom = _context.ChatRooms.FirstOrDefault()?.Name;
             if (SelectedRoom != null)
             {
+                var room = _context.ChatRooms.First(room => room.Name == SelectedRoom);
                 Messages = _context.ChatMessages
-                                         .Where(m => m.ChatRoomId == SelectedRoom.Id)
+                                         .Where(m => m.Id == room.Id)
                                          .OrderByDescending(m => m.Timestamp)
                                          .Take(50)
                                          .ToList();
@@ -39,24 +43,5 @@ namespace ChatApp.Pages
                 Messages = new List<ChatMessage>();
             }
         }
-
-        public IActionResult OnPost(string messageContent, string userId)
-        {
-            var chatRoom = SelectedRoom;
-            if (chatRoom != null)
-            {
-                var message = new ChatMessage()
-                {
-                    Content = messageContent,
-                    ChatRoom = chatRoom,
-                    ChatRoomId = chatRoom.Id,
-                    Timestamp = DateTime.Now,
-                    UserId = userId
-                };
-                _context.ChatMessages.Add(message);        
-            }
-            return RedirectToPage();
-        }
-
     }
 }
